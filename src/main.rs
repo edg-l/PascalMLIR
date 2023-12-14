@@ -66,8 +66,28 @@ mod test {
         check("2.2", ast::Constant::Number(ast::Number::Real("2.2")));
         check("1e10", ast::Constant::Number(ast::Number::Real("1e10")));
 
-
         check(r#""hello world""#, ast::Constant::String("\"hello world\""));
-        check(r#""\"hell\"o world""#, ast::Constant::String("\"\\\"hell\\\"o world\""));
+        check(
+            r#""\"hell\"o world""#,
+            ast::Constant::String("\"\\\"hell\\\"o world\""),
+        );
+    }
+
+    #[test]
+    fn parse_constant_definition() {
+        #[track_caller]
+        fn check(input: &str, value: ast::ConstantDef) {
+            let lexer = Lexer::new(input);
+            let parser = grammar::ConstantDefParser::new();
+            assert_eq!(parser.parse("", lexer).unwrap(), value)
+        }
+
+        check(
+            "MYIDENTIFIER = 2.2",
+            ast::ConstantDef {
+                ident: "MYIDENTIFIER",
+                value: ast::Constant::Number(ast::Number::Real("2.2")),
+            },
+        );
     }
 }

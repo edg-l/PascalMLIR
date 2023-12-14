@@ -18,6 +18,7 @@ extern {
         "string" => Token::String(<&'input str>),
         "-" => Token::SpecialMinus,
         "+" => Token::SpecialPlus,
+        "=" => Token::SpecialEqual,
     }
 }
 
@@ -41,4 +42,11 @@ pub Constant: ast::Constant<'input> = {
     <"string"> => ast::Constant::String(<>),
     "+"? <ident:"identifier"> => ast::Constant::Identifier { is_negative: false, ident },
     "-" <ident:"identifier"> => ast::Constant::Identifier { is_negative: true, ident },
+}
+
+pub ConstantDef: ast::ConstantDef<'input> = {
+    <ident:"identifier"> "=" <value:Constant> => ast::ConstantDef {
+        ident,
+        value
+    }
 }
