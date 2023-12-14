@@ -31,17 +31,12 @@ Comma<T>: Vec<T> = {
     }
 };
 
-
-pub Hello: String = {
-    "program" => "let".to_string()
-}
-
-Number: ast::Number<'input> = {
+pub Number: ast::Number<'input> = {
     <"integer"> => ast::Number::Integer(<>),
     <"real"> => ast::Number::Real(<>),
 }
 
-Constant: ast::Constant<'input> = {
+pub Constant: ast::Constant<'input> = {
     <Number> => ast::Constant::Number(<>),
     <"string"> => ast::Constant::String(<>),
     "+"? <ident:"identifier"> => ast::Constant::Identifier { is_negative: false, ident },

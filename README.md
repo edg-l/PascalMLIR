@@ -1,4 +1,18 @@
-https://www.cs.utexas.edu/users/novak/iso7185.pdf
-https://lalrpop.github.io/lalrpop/lexer_tutorial/004_token_references.html
+# PascalMLIR
 
-im at 6.1.7
+A Pascal compiler using LLVM MLIR in Rust.
+
+Tries to comply with the [ISO/IEC 7185:1990 Standard](https://www.cs.utexas.edu/users/novak/iso7185.pdf)
+
+Work in progress.
+
+## TODO
+
+Currently doing the parser and AST.
+
+<details>
+
+- [ ] Parser
+- [ ] Codegen
+
+</details>
