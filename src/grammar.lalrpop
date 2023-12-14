@@ -1,0 +1,49 @@
+use crate::{
+    ast,
+    tokens::Token,
+    lexer::LexicalError,
+};
+
+grammar<'input>(input: &'input str);
+
+extern {
+    type Location = usize;
+    type Error = LexicalError;
+
+    enum Token<'input> {
+        "program" => Token::WordProgram,
+        "identifier" => Token::Identifier(<&'input str>),
+        "integer" => Token::Integer(<&'input str>),
+        "real" => Token::Real(<&'input str>),
+        "string" => Token::String(<&'input str>),
+        "-" => Token::SpecialMinus,
+        "+" => Token::SpecialPlus,
+    }
+}
+
+Comma<T>: Vec<T> = {
+    <mut v:(<T> ",")*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            v.push(e);
+            v
+        }
+    }
+};
+
+
+pub Hello: String = {
+    "program" => "let".to_string()
+}
+
+Number: ast::Number<'input> = {
+    <"integer"> => ast::Number::Integer(<>),
+    <"real"> => ast::Number::Real(<>),
+}
+
+Constant: ast::Constant<'input> = {
+    <Number> => ast::Constant::Number(<>),
+    <"string"> => ast::Constant::String(<>),
+    "+"? <ident:"identifier"> => ast::Constant::Identifier { is_negative: false, ident },
+    "-" <ident:"identifier"> => ast::Constant::Identifier { is_negative: true, ident },
+}
