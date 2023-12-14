@@ -65,5 +65,9 @@ mod test {
         check("-0.1", ast::Constant::Number(ast::Number::Real("-0.1")));
         check("2.2", ast::Constant::Number(ast::Number::Real("2.2")));
         check("1e10", ast::Constant::Number(ast::Number::Real("1e10")));
+
+
+        check(r#""hello world""#, ast::Constant::String("\"hello world\""));
+        check(r#""\"hell\"o world""#, ast::Constant::String("\"\\\"hell\\\"o world\""));
     }
 }
