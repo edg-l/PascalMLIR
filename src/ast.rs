@@ -26,14 +26,38 @@ pub enum SimpleType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum RecordField<'input> {
-    Fixed {
-        identifier_list: Vec<&'input str>,
-        type_denoter: Type<'input>,
-    },
-    Case {
-        // TODO: 6.4.3.3 Record-types
-    },
+pub struct VariantSelector<'input> {
+    pub tag_field: Option<&'input str>,
+    pub tag_type: Box<Type<'input>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CaseVariant<'input> {
+    pub case_constants: Vec<Constant<'input>>,
+    pub field_list: Option<RecordFieldList<'input>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecordSection<'input> {
+    pub identifier_list: Vec<&'input str>,
+    pub type_denoter: Box<Type<'input>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecordFixedPart<'input> {
+    pub records: Vec<RecordSection<'input>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecordVariantPart<'input> {
+    pub variant_selector: VariantSelector<'input>,
+    pub variants: Vec<CaseVariant<'input>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecordFieldList<'input> {
+    pub fixed_part: Option<RecordFixedPart<'input>>,
+    pub variant_part: Option<RecordVariantPart<'input>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,7 +65,7 @@ pub enum Type<'input> {
     Identifier(&'input str),
     Simple(SimpleType),
     Enumerated(Vec<&'input str>),
-    Subrange {
+    SubRange {
         start: Constant<'input>,
         end: Constant<'input>,
     },
@@ -51,7 +75,8 @@ pub enum Type<'input> {
         packed: bool,
     },
     Record {
-        fields: Vec<RecordField<'input>>,
+        field_list: Option<RecordFieldList<'input>>,
+        packed: bool,
     },
 }
 

@@ -14,7 +14,7 @@ lalrpop-util = { version = "0.20.0", features = ["lexer"] }
 regex = "1.9"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-annotate-snippets = { version = "0.9.1", features = ["color"] }
+annotate-snippets = { version = "0.10.0" }
 logos = "0.13.0"
 
 [build-dependencies]

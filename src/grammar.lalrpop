@@ -19,11 +19,49 @@ extern {
         "-" => Token::SpecialMinus,
         "+" => Token::SpecialPlus,
         "=" => Token::SpecialEqual,
+        "(" => Token::SpecialOpenParen,
+        ")" => Token::SpecialCloseParen,
+        "[" => Token::SpecialOpenBracket,
+        "]" => Token::SpecialCloseBracket,
+        "," => Token::SpecialComma,
+        ":" => Token::SpecialColon,
+        ";" => Token::SpecialSemiColon,
+        ".." => Token::SpecialRange,
+        "array" => Token::WordArray,
+        "of" => Token::WordOf,
+        "packed" => Token::WordPacked,
+        "record" => Token::WordRecord,
+        "end" => Token::WordEnd,
+        "case" => Token::WordCase,
+        "type_integer" => Token::TypeInteger,
+        "type_real" => Token::TypeReal,
+        "type_boolean" => Token::TypeBoolean,
+        "type_char" => Token::TypeChar,
     }
 }
 
 Comma<T>: Vec<T> = {
     <mut v:(<T> ",")*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            v.push(e);
+            v
+        }
+    }
+};
+
+CommaNoTrailing<T>: Vec<T> = {
+    <mut v:(<T>)*> <e:("," <T>)?> => match e {
+        None => v,
+        Some(e) => {
+            v.push(e);
+            v
+        }
+    }
+};
+
+SemiColonNoTrailing<T>: Vec<T> = {
+    <mut v:(<T>)*> <e:(";" <T>)?> => match e {
         None => v,
         Some(e) => {
             v.push(e);
@@ -48,5 +86,105 @@ pub ConstantDef: ast::ConstantDef<'input> = {
     <ident:"identifier"> "=" <value:Constant> => ast::ConstantDef {
         ident,
         value
+    }
+}
+
+pub SimpleType: ast::SimpleType = {
+    "type_integer" => ast::SimpleType::Integer,
+    "type_real" => ast::SimpleType::Real,
+    "type_boolean" => ast::SimpleType::Boolean,
+    "type_char" => ast::SimpleType::Char,
+}
+
+pub EnumeratedType: Vec<&'input str> = {
+    "(" <CommaNoTrailing<"identifier">> ")" => <>
+}
+
+pub SubRangeType: ast::Type<'input> = {
+    <start:Constant> ".." <end:Constant> => ast::Type::SubRange {
+        start,
+        end
+    }
+}
+
+ArrayIndexCompatibleType: ast::Type<'input> = {
+    <SimpleType> => ast::Type::Simple(<>),
+    <SubRangeType> => <>,
+}
+
+RecordSection: ast::RecordSection<'input> = {
+    <identifier_list:CommaNoTrailing<"identifier">> ":" <type_denoter:Type> => ast::RecordSection {
+        identifier_list,
+        type_denoter: Box::new(type_denoter)
+    }
+}
+
+RecordFixedPart: ast::RecordFixedPart<'input> = {
+    <records:SemiColonNoTrailing<RecordSection>> => ast::RecordFixedPart {
+        records
+    }
+}
+
+VariantSelector: ast::VariantSelector<'input> = {
+    <tag_field:"identifier"> ":" <tag_type:Type> => ast::VariantSelector {
+        tag_field: Some(tag_field),
+        tag_type: Box::new(tag_type)
+    },
+    <tag_type:Type> => ast::VariantSelector {
+        tag_field: None,
+        tag_type: Box::new(tag_type)
+    },
+}
+
+CaseVariant: ast::CaseVariant<'input> = {
+    <case_constants:CommaNoTrailing<Constant>> ":" "(" <field_list:RecordFieldList?> ")" => ast::CaseVariant {
+        case_constants,
+        field_list
+    },
+}
+
+RecordVariantPart: ast::RecordVariantPart<'input> = {
+    "case" <variant_selector:VariantSelector> "of" <variants:SemiColonNoTrailing<CaseVariant>> => ast::RecordVariantPart {
+        variant_selector,
+        variants
+    },
+}
+
+RecordFieldList: ast::RecordFieldList<'input> = {
+    <fixed_part:RecordFixedPart> ";"? => ast::RecordFieldList {
+        fixed_part: Some(fixed_part),
+        variant_part: None
+    },
+    <fixed_part:RecordFixedPart> ";" <variant_part:RecordVariantPart> ";"? => ast::RecordFieldList {
+        fixed_part: Some(fixed_part),
+        variant_part: Some(variant_part)
+    },
+    <variant_part:RecordVariantPart> ";"? => ast::RecordFieldList {
+        fixed_part: None,
+        variant_part: Some(variant_part)
+    },
+}
+
+pub Type: ast::Type<'input> = {
+    <p:"packed"?> "array" "[" <index:CommaNoTrailing<ArrayIndexCompatibleType>> "]" "of" <c:Type> => ast::Type::Array {
+        index,
+        component: Box::new(c),
+        packed: p.is_some(),
+    },
+    <SimpleType> => ast::Type::Simple(<>),
+    <"identifier"> => ast::Type::Identifier(<>),
+    <EnumeratedType> => ast::Type::Enumerated(<>),
+    <SubRangeType> => <>,
+    // fixme
+    <p:"packed"?> "record" <field_list:RecordFieldList?> "end" => ast::Type::Record {
+        field_list,
+        packed: p.is_some(),
+    }
+}
+
+pub TypeDef: ast::TypeDef<'input> = {
+    <ident:"identifier"> "=" <value:Type> => ast::TypeDef {
+        ident,
+        value,
     }
 }

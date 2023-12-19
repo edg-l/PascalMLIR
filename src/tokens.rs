@@ -59,7 +59,7 @@ pub enum Token<'input> {
     #[token(",")]
     SpecialComma,
     #[token(";")]
-    SpecialDotComma,
+    SpecialSemiColon,
     #[token("\"")]
     SpecialQuotation,
     #[token("(")]
@@ -74,6 +74,8 @@ pub enum Token<'input> {
     SpecialGreaterEqual,
     #[token(":=")]
     SpecialAssign,
+    #[token(":")]
+    SpecialColon,
     #[token("..")]
     SpecialRange,
 
@@ -148,4 +150,18 @@ pub enum Token<'input> {
     WordWhile,
     #[token("with")]
     WordWith,
+
+    #[token("integer")]
+    TypeInteger,
+    #[token("real")]
+    TypeReal,
+    #[token("Boolean")]
+    TypeBoolean,
+    #[token("char")]
+    TypeChar,
+
+    #[token("true")]
+    WordTrue,
+    #[token("false")]
+    WordFalse,
 }
