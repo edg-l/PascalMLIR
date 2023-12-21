@@ -107,7 +107,7 @@ pub SubRangeType: ast::Type<'input> = {
     }
 }
 
-ArrayIndexCompatibleType: ast::Type<'input> = {
+OrdinalType: ast::Type<'input> = {
     <SimpleType> => ast::Type::Simple(<>),
     <SubRangeType> => <>,
 }
@@ -126,11 +126,11 @@ RecordFixedPart: ast::RecordFixedPart<'input> = {
 }
 
 VariantSelector: ast::VariantSelector<'input> = {
-    <tag_field:"identifier"> ":" <tag_type:Type> => ast::VariantSelector {
+    <tag_field:"identifier"> ":" <tag_type:OrdinalType> => ast::VariantSelector {
         tag_field: Some(tag_field),
         tag_type: Box::new(tag_type)
     },
-    <tag_type:Type> => ast::VariantSelector {
+    <tag_type:OrdinalType> => ast::VariantSelector {
         tag_field: None,
         tag_type: Box::new(tag_type)
     },
@@ -166,20 +166,19 @@ RecordFieldList: ast::RecordFieldList<'input> = {
 }
 
 pub Type: ast::Type<'input> = {
-    <p:"packed"?> "array" "[" <index:CommaNoTrailing<ArrayIndexCompatibleType>> "]" "of" <c:Type> => ast::Type::Array {
+    <p:"packed"?> "record" <field_list:RecordFieldList?> "end" => ast::Type::Record {
+        field_list: None,
+        packed: p.is_some(),
+    },
+    <p:"packed"?> "array" "[" <index:CommaNoTrailing<OrdinalType>> "]" "of" <c:Type> => ast::Type::Array {
         index,
         component: Box::new(c),
         packed: p.is_some(),
     },
     <SimpleType> => ast::Type::Simple(<>),
-    <"identifier"> => ast::Type::Identifier(<>),
     <EnumeratedType> => ast::Type::Enumerated(<>),
     <SubRangeType> => <>,
-    // fixme
-    <p:"packed"?> "record" <field_list:RecordFieldList?> "end" => ast::Type::Record {
-        field_list,
-        packed: p.is_some(),
-    }
+    <"identifier"> => ast::Type::Identifier(<>),
 }
 
 pub TypeDef: ast::TypeDef<'input> = {
